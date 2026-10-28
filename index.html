@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>旋转</title>
+<style>
+  :root {
+    --bg: #f3ecdf;
+    --ink: #241c14;
+    --muted: #6d6156;
+    --card: #fffaf3;
+    --line: #eadfce;
+    --honey: #f0b429;
+    --honey-deep: #8a4b08;
+    --brown: #6b3f22;
+    --red: #d84532;
+    --good: #0f7a4e;
+    --good-bg: #e7f6ef;
+    --blue: #3d7ea6;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse at 8% -10%, #fff8ea 0%, transparent 46%),
+      radial-gradient(ellipse at 100% 0%, #fde7c2 0%, transparent 34%),
+      var(--bg);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  }
+
+  button, input { font-family: inherit; }
+
+  .app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 16px 14px;
+    gap: 10px;
+  }
+
+  header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 2px 8px 0;
+  }
+
+  .who {
+    justify-self: start;
+    line-height: 0;
+  }
+
+  .teacher-badge {
+    width: clamp(124px, 14vw, 156px);
+    height: auto;
+    display: block;
+  }
+
+  .brand-title {
+    justify-self: center;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+    font-size: clamp(36px, 4vw, 52px);
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-indent: 0.28em;
+    line-height: 1;
+  }
+
+  .en-title {
+    margin: 6px 0 0;
+    color: var(--honey-deep);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .school {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .school img {
+    width: clamp(56px, 7vw, 78px);
+    height: auto;
+    object-fit: contain;
+  }
+
+  .school-name {
+    margin: 0;
+    color: #00447c;
+    font-size: 15px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    line-height: 1.35;
+    text-align: right;
+  }
+
+  main {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .panel {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 250, 243, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    box-shadow: 0 12px 32px rgba(90, 55, 15, 0.07);
+    overflow: hidden;
+  }
+
+  .q {
+    padding: 12px 16px 0;
+  }
+
+  .q-kicker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    color: #a16207;
+  }
+
+  .q-kicker i {
+    font-style: normal;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fff1d2;
+    color: var(--honey-deep);
+  }
+
+  .q p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .stage {
+    position: relative;
+    flex: 1;
+    min-height: 300px;
+    margin: 10px 12px 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 50% 120%, rgba(90, 55, 15, 0.05), transparent 46%),
+      linear-gradient(180deg, #fffdf8 0%, #f7f1e6 100%);
+    border: 1px solid #f0e6d6;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  canvas:active { cursor: grabbing; }
+
+  .drag-tip {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 250, 243, 0.88);
+    color: var(--muted);
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  .controls {
+    padding: 10px 14px 12px;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr 0.9fr;
+    gap: 8px;
+  }
+
+  .fact {
+    padding: 7px 10px 8px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--line);
+  }
+
+  .fact span {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+
+  .fact strong {
+    display: block;
+    margin-top: 1px;
+    font-size: 20px;
+    font-weight: 750;
+    letter-spacing: 0.04em;
+  }
+
+  .deg-edit {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    margin-top: 1px;
+  }
+
+  .deg-edit input {
+    width: 3.2em;
+    margin: 0;
+    padding: 0 0 1px;
+    border: 0;
+    border-bottom: 1.5px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--red);
+    font-size: 26px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .deg-edit input:focus {
+    outline: none;
+    border-bottom-color: var(--red);
+  }
+
+  .deg-edit b {
+    color: var(--red);
+    font-size: 22px;
+    font-weight: 750;
+  }
+
+  .dirs {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .dirs button {
+    flex: 1;
+    justify-content: center;
+    padding: 5px 8px;
+    font-size: 13px;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #f3d7a1, #e7b15a);
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--honey-deep);
+    box-shadow: 0 1px 4px rgba(90, 55, 15, 0.25);
+    cursor: pointer;
+  }
+
+  .ticks {
+    display: flex;
+    justify-content: space-between;
+    margin: 2px 46px 0 0;
+    color: #a89886;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  button {
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 7px 10px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  button:hover { border-color: #e2c48a; background: #fffdf8; }
+
+  button.on {
+    background: #fff6e0;
+    border-color: #e8b14a;
+    color: #7c4a03;
+    font-weight: 700;
+  }
+
+  button.primary {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+    font-weight: 650;
+  }
+
+  .say {
+    margin: 8px 0 0;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: #fff6e4;
+    color: #3f2d1c;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .say b { font-weight: 750; }
+
+  @media (max-width: 1100px) {
+    main { grid-template-columns: 1fr; }
+    .stage { min-height: 340px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="who">
+        <svg class="teacher-badge" viewBox="0 0 240 240" role="img" aria-label="刘老师数学课堂">
+          <defs>
+            <clipPath id="teacherFace">
+              <circle cx="120" cy="152" r="40" />
+            </clipPath>
+          </defs>
+          <circle cx="120" cy="120" r="114" fill="#f7f1e6" stroke="#6b3f22" stroke-width="5" />
+          <circle cx="120" cy="152" r="44" fill="#f6e2a8" />
+          <image href="teacher-logo.png" x="36" y="64" width="168" height="168" clip-path="url(#teacherFace)" />
+          <g fill="#6b3f22" font-size="20" font-weight="700" font-family="PingFang SC, Hiragino Sans GB, Noto Sans SC, sans-serif" text-anchor="middle" dominant-baseline="central">
+            <text x="52.5" y="81" transform="rotate(-60 52.5 81)">刘</text>
+            <text x="69.9" y="60.3" transform="rotate(-40 69.9 60.3)">老</text>
+            <text x="93.3" y="46.7" transform="rotate(-20 93.3 46.7)">师</text>
+            <text x="120" y="42" transform="rotate(0 120 42)">数</text>
+            <text x="146.7" y="46.7" transform="rotate(20 146.7 46.7)">学</text>
+            <text x="170.1" y="60.3" transform="rotate(40 170.1 60.3)">课</text>
+            <text x="187.5" y="81" transform="rotate(60 187.5 81)">堂</text>
+          </g>
+          <text x="120" y="210" text-anchor="middle" fill="#a16207" font-size="13" font-weight="700" font-family="PingFang SC, Hiragino Sans GB, Noto Sans SC, sans-serif">Teacher Liu</text>
+        </svg>
+      </div>
+      <div class="brand-title">
+        <h1>旋转</h1>
+        <p class="en-title">Rotation</p>
+      </div>
+      <div class="school">
+        <p class="school-name">北京市<br>鼎石学校</p>
+        <img src="keystone-logo.svg" alt="北京市鼎石学校" />
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="q">
+          <p class="q-kicker"><i>问题 1</i> 时钟指针</p>
+          <p>指针从「12」走到「1」，是绕哪个点、按什么方向旋转的？旋转了多少度？</p>
+        </div>
+        <div class="stage">
+          <canvas id="clock"></canvas>
+          <div class="drag-tip">按住指针拖动，绕点 O 旋转</div>
+        </div>
+        <div class="controls">
+          <div class="facts">
+            <div class="fact"><span>旋转中心</span><strong>点 O</strong></div>
+            <div class="fact">
+              <span>旋转方向</span>
+              <div class="dirs">
+                <button type="button" id="clockCW" class="on">顺时针</button>
+                <button type="button" id="clockCCW">逆时针</button>
+              </div>
+            </div>
+            <div class="fact angle">
+              <span>旋转角度</span>
+              <label class="deg-edit">
+                <input id="clockDeg" type="number" min="0" max="360" step="1" value="30" aria-label="输入时钟旋转角度" />
+                <b>°</b>
+              </label>
+            </div>
+          </div>
+          <div class="slider-row">
+            <input id="clockRange" type="range" min="0" max="360" value="30" aria-label="时钟旋转角度" />
+          </div>
+          <div class="ticks"><span>0°</span><span>30°</span><span>90°</span><span>180°</span><span>360°</span></div>
+          <div class="actions">
+            <button type="button" data-clock="0">回到 12</button>
+            <button type="button" data-clock="30">走到 1</button>
+            <button type="button" data-clock="60">走到 2</button>
+            <button type="button" data-clock="90">走到 3</button>
+            <button type="button" data-clock="120">走到 4</button>
+            <button type="button" data-clock="150">走到 5</button>
+            <button type="button" data-clock="180">走到 6</button>
+            <button type="button" data-clock="210">走到 7</button>
+            <button type="button" id="clockPlay" class="primary">演示</button>
+          </div>
+          <p class="say" id="clockSay"></p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="q">
+          <p class="q-kicker"><i>问题 2</i> 三角尺</p>
+          <p>将三角尺在方格纸上按顺时针方向旋转 90°，观察位置是如何变化的。你有什么发现？</p>
+        </div>
+        <div class="stage">
+          <canvas id="tri"></canvas>
+          <div class="drag-tip">按住三角尺拖动，绕点 O 旋转</div>
+        </div>
+        <div class="controls">
+          <div class="facts">
+            <div class="fact"><span>旋转中心</span><strong>点 O</strong></div>
+            <div class="fact">
+              <span>旋转方向</span>
+              <div class="dirs">
+                <button type="button" id="triCW" class="on">顺时针</button>
+                <button type="button" id="triCCW">逆时针</button>
+              </div>
+            </div>
+            <div class="fact angle">
+              <span>旋转角度</span>
+              <label class="deg-edit">
+                <input id="triDeg" type="number" min="0" max="360" step="1" value="90" aria-label="输入三角尺旋转角度" />
+                <b>°</b>
+              </label>
+            </div>
+          </div>
+          <div class="slider-row">
+            <input id="triRange" type="range" min="0" max="360" value="90" aria-label="三角尺旋转角度" />
+          </div>
+          <div class="ticks"><span>0°</span><span>30°</span><span>90°</span><span>180°</span><span>360°</span></div>
+          <div class="actions">
+            <button type="button" data-tri="0">起始位置</button>
+            <button type="button" data-tri="90">顺时针 90°</button>
+            <button type="button" data-tri="-90">逆时针 90°</button>
+            <button type="button" id="triPlay" class="primary">演示</button>
+          </div>
+          <p class="say" id="triSay"></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const TAU = Math.PI * 2;
+
+function clampAbs(v) {
+  let a = Math.abs(v) % 360;
+  const s = v < 0 ? -1 : 1;
+  if (a > 359.5) a = 0;
+  return s * a;
+}
+
+function fit(canvas) {
+  const r = canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.max(1, Math.round(r.width * dpr));
+  canvas.height = Math.max(1, Math.round(r.height * dpr));
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: r.width, h: r.height };
+}
+
+const clockState = { signed: 30, drag: null };
+const triState = { signed: 90, drag: null };
+let clockAnim = 0, triAnim = 0;
+
+function clockCaption() {
+  const dir = clockState.signed >= 0 ? "顺时针" : "逆时针";
+  const deg = Math.round(Math.abs(clockState.signed));
+  return { html: `绕点 <b>O</b>，按<b>${dir}</b>方向旋转了 <b>${deg}°</b>。`, deg, dir };
+}
+
+function triCaption() {
+  const dir = triState.signed >= 0 ? "顺时针" : "逆时针";
+  const deg = Math.round(Math.abs(triState.signed));
+  return { html: `三角尺绕点 <b>O</b>，按<b>${dir}</b>方向旋转了 <b>${deg}°</b>。`, deg, dir };
+}
+
+function syncClockUI() {
+  const cap = clockCaption();
+  const clockDeg = document.getElementById("clockDeg");
+  if (document.activeElement !== clockDeg) clockDeg.value = String(cap.deg);
+  document.getElementById("clockRange").value = String(cap.deg);
+  document.getElementById("clockCW").classList.toggle("on", clockState.signed >= 0);
+  document.getElementById("clockCCW").classList.toggle("on", clockState.signed < 0);
+  document.getElementById("clockSay").innerHTML = cap.html;
+}
+
+function syncTriUI() {
+  const cap = triCaption();
+  const triDeg = document.getElementById("triDeg");
+  if (document.activeElement !== triDeg) triDeg.value = String(cap.deg);
+  document.getElementById("triRange").value = String(cap.deg);
+  document.getElementById("triCW").classList.toggle("on", triState.signed >= 0);
+  document.getElementById("triCCW").classList.toggle("on", triState.signed < 0);
+  document.getElementById("triSay").innerHTML = cap.html;
+}
+
+function clockLayout(w, h) {
+  const R = Math.min(w, h) * 0.42;
+  return { cx: w * 0.5, cy: h * 0.5, R };
+}
+
+function clockPoint(ang, rad, layout) {
+  return [
+    layout.cx + Math.sin(ang) * rad,
+    layout.cy - Math.cos(ang) * rad
+  ];
+}
+
+function drawClock() {
+  const canvas = document.getElementById("clock");
+  const { ctx, w, h } = fit(canvas);
+  const layout = clockLayout(w, h);
+  const { cx, cy, R } = layout;
+  const theta = clockState.signed * Math.PI / 180;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#fbf8f2";
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, TAU);
+  ctx.fillStyle = "#fffdf8";
+  ctx.fill();
+  ctx.lineWidth = Math.max(8, R * 0.045);
+  ctx.strokeStyle = "#6b3f22";
+  ctx.stroke();
+
+  ctx.lineCap = "butt";
+  for (let i = 0; i < 60; i++) {
+    const a = i * Math.PI / 30;
+    const major = i % 5 === 0;
+    const p1 = clockPoint(a, major ? R * 0.82 : R * 0.9, layout);
+    const p2 = clockPoint(a, R * 0.96, layout);
+    ctx.beginPath();
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p2[0], p2[1]);
+    ctx.strokeStyle = major ? "#3a2a20" : "#c3b5a4";
+    ctx.lineWidth = major ? 2.5 : 1;
+    ctx.stroke();
+  }
+
+  ctx.font = `700 ${Math.round(R * 0.13)}px Songti SC, STSong, serif`;
+  ctx.fillStyle = "#2a2118";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (let n = 1; n <= 12; n++) {
+    const p = clockPoint(n * Math.PI / 6, R * 0.68, layout);
+    ctx.fillText(String(n), p[0], p[1]);
+  }
+
+  const sweep = Math.abs(theta);
+  const sign = clockState.signed >= 0 ? 1 : -1;
+  if (sweep > 0.01) {
+    const steps = Math.max(8, Math.ceil(sweep / 0.08));
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    for (let i = 0; i <= steps; i++) {
+      const p = clockPoint(sign * sweep * i / steps, R * 0.36, layout);
+      ctx.lineTo(p[0], p[1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "rgba(216, 69, 50, 0.16)";
+    ctx.fill();
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const p = clockPoint(sign * sweep * i / steps, R * 0.48, layout);
+      if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]);
+    }
+    ctx.strokeStyle = "#d84532";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    const tip = clockPoint(sign * sweep, R * 0.48, layout);
+    const prev = clockPoint(sign * sweep * 0.9, R * 0.48, layout);
+    const head = Math.atan2(tip[1] - prev[1], tip[0] - prev[0]);
+    ctx.beginPath();
+    ctx.moveTo(tip[0], tip[1]);
+    ctx.lineTo(tip[0] - 11 * Math.cos(head - 0.45), tip[1] - 11 * Math.sin(head - 0.45));
+    ctx.lineTo(tip[0] - 11 * Math.cos(head + 0.45), tip[1] - 11 * Math.sin(head + 0.45));
+    ctx.closePath();
+    ctx.fillStyle = "#d84532";
+    ctx.fill();
+  }
+
+  const g0 = clockPoint(0, R * 0.08, layout);
+  const g1 = clockPoint(0, R * 0.74, layout);
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(g0[0], g0[1]);
+  ctx.lineTo(g1[0], g1[1]);
+  ctx.strokeStyle = "rgba(36, 28, 20, 0.35)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const tail = clockPoint(theta, R * 0.12, layout);
+  const neck = clockPoint(theta, R * 0.46, layout);
+  const head = clockPoint(theta, R * 0.6, layout);
+  const side = Math.atan2(head[1] - tail[1], head[0] - tail[0]) + Math.PI / 2;
+  const shaft = Math.max(3.5, R * 0.018);
+  const headW = Math.max(12, R * 0.07);
+  ctx.beginPath();
+  ctx.moveTo(tail[0] + Math.cos(side) * shaft, tail[1] + Math.sin(side) * shaft);
+  ctx.lineTo(neck[0] + Math.cos(side) * shaft, neck[1] + Math.sin(side) * shaft);
+  ctx.lineTo(neck[0] + Math.cos(side) * headW, neck[1] + Math.sin(side) * headW);
+  ctx.lineTo(head[0], head[1]);
+  ctx.lineTo(neck[0] - Math.cos(side) * headW, neck[1] - Math.sin(side) * headW);
+  ctx.lineTo(neck[0] - Math.cos(side) * shaft, neck[1] - Math.sin(side) * shaft);
+  ctx.lineTo(tail[0] - Math.cos(side) * shaft, tail[1] - Math.sin(side) * shaft);
+  ctx.closePath();
+  ctx.fillStyle = "#1d1814";
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 6.5, 0, TAU);
+  ctx.fillStyle = "#d84532";
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#fff";
+  ctx.stroke();
+  ctx.font = "700 16px Songti SC, STSong, serif";
+  ctx.fillStyle = "#d84532";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText("O", cx + 12, cy + 16);
+  ctx.restore();
+}
+
+function triLayout(w, h) {
+  const cell = Math.max(36, Math.floor(Math.min(w, h) / 12));
+  const ox = Math.round((w * 0.42) / cell) * cell;
+  const oy = Math.round((h * 0.42) / cell) * cell;
+  return { cell, ox, oy };
+}
+
+function triPoint(gx, gy, ang, layout) {
+  const x = gx * layout.cell;
+  const y = -gy * layout.cell;
+  const c = Math.cos(ang), s = Math.sin(ang);
+  return [layout.ox + x * c - y * s, layout.oy + x * s + y * c];
+}
+
+function drawTri() {
+  const canvas = document.getElementById("tri");
+  const { ctx, w, h } = fit(canvas);
+  const layout = triLayout(w, h);
+  const { cell, ox, oy } = layout;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#fbf8f2";
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(90, 78, 64, 0.55)";
+  ctx.lineWidth = 1.25;
+  ctx.beginPath();
+  const xStart = ox - Math.ceil(ox / cell) * cell;
+  const yStart = oy - Math.ceil(oy / cell) * cell;
+  for (let x = xStart; x <= w + cell; x += cell) {
+    const px = Math.round(x) + 0.5;
+    ctx.moveTo(px, 0);
+    ctx.lineTo(px, h);
+  }
+  for (let y = yStart; y <= h + cell; y += cell) {
+    const py = Math.round(y) + 0.5;
+    ctx.moveTo(0, py);
+    ctx.lineTo(w, py);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  const ang = triState.signed * Math.PI / 180;
+  const leg = 4;
+  const verts = [[0, 0], [0, leg], [leg, 0]];
+  const poly = (pts) => {
+    ctx.beginPath();
+    pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+    ctx.closePath();
+  };
+
+  ctx.save();
+  ctx.setLineDash([6, 5]);
+  ctx.strokeStyle = "rgba(61, 126, 166, 0.8)";
+  ctx.lineWidth = 2;
+  poly(verts.map(([x, y]) => triPoint(x, y, 0, layout)));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const shape = verts.map(([x, y]) => triPoint(x, y, ang, layout));
+  poly(shape);
+  ctx.fillStyle = "rgba(168, 210, 234, 0.55)";
+  ctx.fill();
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = "#2f6f96";
+  ctx.stroke();
+
+  const A = shape[1], B = shape[2];
+  const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+  const gx = shape[0][0] - mx, gy = shape[0][1] - my;
+  const glen = Math.hypot(gx, gy) || 1;
+  const nx = gx / glen, ny = gy / glen;
+  const tick = cell * 0.22;
+  for (let i = 1; i < 8; i++) {
+    const t = i / 8;
+    const x = A[0] + (B[0] - A[0]) * t;
+    const y = A[1] + (B[1] - A[1]) * t;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + nx * tick, y + ny * tick);
+    ctx.strokeStyle = "#2f6f96";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  const mark = 0.55;
+  ctx.beginPath();
+  [[0, mark], [mark, mark], [mark, 0]].forEach((p, i) => {
+    const s = triPoint(p[0], p[1], ang, layout);
+    if (i) ctx.lineTo(s[0], s[1]); else ctx.moveTo(s[0], s[1]);
+  });
+  ctx.strokeStyle = "#2f6f96";
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  if (Math.abs(ang) > 0.02) {
+    const steps = Math.max(12, Math.ceil(Math.abs(ang) / 0.08));
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    for (let i = 0; i <= steps; i++) {
+      const p = triPoint(0, 1.15, ang * i / steps, layout);
+      ctx.lineTo(p[0], p[1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = "rgba(216, 69, 50, 0.16)";
+    ctx.fill();
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const p = triPoint(0, 1.55, ang * i / steps, layout);
+      if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]);
+    }
+    ctx.strokeStyle = "#d84532";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    const tip = triPoint(0, 1.55, ang, layout);
+    const prev = triPoint(0, 1.55, ang * 0.86, layout);
+    const head = Math.atan2(tip[1] - prev[1], tip[0] - prev[0]);
+    ctx.beginPath();
+    ctx.moveTo(tip[0], tip[1]);
+    ctx.lineTo(tip[0] - 11 * Math.cos(head - 0.45), tip[1] - 11 * Math.sin(head - 0.45));
+    ctx.lineTo(tip[0] - 11 * Math.cos(head + 0.45), tip[1] - 11 * Math.sin(head + 0.45));
+    ctx.closePath();
+    ctx.fillStyle = "#d84532";
+    ctx.fill();
+  }
+
+  const centroid = shape.reduce((s, p) => [s[0] + p[0], s[1] + p[1]], [0, 0]).map((v) => v / 3);
+  let lx = ox - centroid[0], ly = oy - centroid[1];
+  const llen = Math.hypot(lx, ly) || 1;
+  lx = ox + lx / llen * 22;
+  ly = oy + ly / llen * 22;
+  ctx.beginPath();
+  ctx.arc(ox, oy, 6, 0, TAU);
+  ctx.fillStyle = "#d84532";
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#fff";
+  ctx.stroke();
+  ctx.font = "700 18px Songti SC, STSong, serif";
+  ctx.fillStyle = "#d84532";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("O", lx, ly);
+  ctx.restore();
+}
+
+function render() {
+  drawClock();
+  drawTri();
+  syncClockUI();
+  syncTriUI();
+}
+
+function clockPointerAngle(ev) {
+  const canvas = document.getElementById("clock");
+  const rect = canvas.getBoundingClientRect();
+  const { cx, cy } = clockLayout(rect.width, rect.height);
+  const x = ev.clientX - rect.left - cx;
+  const y = ev.clientY - rect.top - cy;
+  return Math.atan2(x, -y);
+}
+
+function triPointerAngle(ev) {
+  const canvas = document.getElementById("tri");
+  const rect = canvas.getBoundingClientRect();
+  const { ox, oy } = triLayout(rect.width, rect.height);
+  const x = ev.clientX - rect.left - ox;
+  const y = ev.clientY - rect.top - oy;
+  return Math.atan2(x, -y);
+}
+
+function bindDrag(canvas, state, getAngle) {
+  canvas.addEventListener("pointerdown", (ev) => {
+    try { canvas.setPointerCapture(ev.pointerId); } catch (err) {}
+    const ang = getAngle(ev);
+    if (ang == null) return;
+    state.drag = { last: ang };
+  });
+  canvas.addEventListener("pointermove", (ev) => {
+    if (!state.drag) return;
+    const ang = getAngle(ev);
+    if (ang == null) return;
+    let d = ang - state.drag.last;
+    while (d > Math.PI) d -= TAU;
+    while (d < -Math.PI) d += TAU;
+    state.drag.last = ang;
+    state.signed = clampAbs(state.signed + d * 180 / Math.PI);
+    render();
+  });
+  const end = () => { state.drag = null; };
+  canvas.addEventListener("pointerup", end);
+  canvas.addEventListener("pointercancel", end);
+}
+
+bindDrag(document.getElementById("clock"), clockState, clockPointerAngle);
+bindDrag(document.getElementById("tri"), triState, triPointerAngle);
+
+function setSigned(state, value) {
+  state.signed = clampAbs(value);
+  render();
+}
+
+function applyTypedAngle(state, input) {
+  if (input.value === "") return;
+  const mag = Math.min(360, Math.max(0, Number(input.value)));
+  if (!Number.isFinite(mag)) return;
+  const sign = state.signed < 0 ? -1 : 1;
+  setSigned(state, sign * mag);
+}
+
+document.getElementById("clockRange").addEventListener("input", (e) => {
+  const mag = Number(e.target.value);
+  const sign = clockState.signed < 0 ? -1 : 1;
+  setSigned(clockState, sign * mag);
+});
+document.getElementById("triRange").addEventListener("input", (e) => {
+  const mag = Number(e.target.value);
+  const sign = triState.signed < 0 ? -1 : 1;
+  setSigned(triState, sign * mag);
+});
+document.getElementById("clockDeg").addEventListener("input", (e) => applyTypedAngle(clockState, e.target));
+document.getElementById("triDeg").addEventListener("input", (e) => applyTypedAngle(triState, e.target));
+document.getElementById("clockCW").onclick = () => setSigned(clockState, Math.abs(clockState.signed));
+document.getElementById("clockCCW").onclick = () => setSigned(clockState, -Math.abs(clockState.signed || 30));
+document.getElementById("triCW").onclick = () => setSigned(triState, Math.abs(triState.signed));
+document.getElementById("triCCW").onclick = () => setSigned(triState, -Math.abs(triState.signed || 90));
+document.querySelectorAll("[data-clock]").forEach((btn) => {
+  btn.onclick = () => setSigned(clockState, Number(btn.dataset.clock));
+});
+document.querySelectorAll("[data-tri]").forEach((btn) => {
+  btn.onclick = () => setSigned(triState, Number(btn.dataset.tri));
+});
+
+function play(state, target, tokenName) {
+  const from = 0;
+  const start = performance.now();
+  const dur = 1100;
+  const token = (tokenName === "clock" ? ++clockAnim : ++triAnim);
+  function frame(now) {
+    const cur = tokenName === "clock" ? clockAnim : triAnim;
+    if (cur !== token) return;
+    const t = Math.min(1, (now - start) / dur);
+    const e = 1 - Math.pow(1 - t, 3);
+    state.signed = from + (target - from) * e;
+    render();
+    if (t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+document.getElementById("clockPlay").onclick = () => play(clockState, 30, "clock");
+document.getElementById("triPlay").onclick = () => play(triState, 90, "tri");
+
+window.addEventListener("resize", render);
+render();
+</script>
+</body>
+</html>
